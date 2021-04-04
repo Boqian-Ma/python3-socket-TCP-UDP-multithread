@@ -4,7 +4,6 @@ import random
 import argparse
 import datetime
 
-
 STATE = 0 # logout = 0, login = 1
 FORMAT = "utf-8"
 
@@ -29,7 +28,6 @@ def send_message(msg, tcp_client):
 
 
 def connect(tcp_client):
-
     connected = False
     # Login 
     while not connected:
@@ -39,25 +37,18 @@ def connect(tcp_client):
         package = username + " " + password
         # Send login details
         response = send_message(package, tcp_client)
-
         if str(response) == "SUCCESS: LOGIN":
             connected = True
-
             print("Login Succeed...")
         else:
             print("Please Check Login Details...")
-    
-    
     print("Select from the following options to continue...")
-
     while connected:
         input_msg = str(input(WELCOME))
-
         retstr = user_actions(input_msg)
         if retstr is None:
             print("[INVALID COMMAND] Please try again...")
             continue
-        
         if retstr == "OUT":
             # Log out
             connected = False
@@ -78,40 +69,31 @@ def user_actions(user_input):
     OUT: Log out and UPD: Upload file
     """
     # user_input = str(input(WELCOME))
-
     # Remove trailing spaces
     user_input = user_input.rstrip()
-
     command = user_input[:3]
-
     retstr = None # Return string
-
     if command == "MSG":
         # Send message
-        if user_input[3:]:
+        if validate_msg(user_input):
             retstr = user_input
-
     elif command == "DLT":
         # Delete message
         if validate_dlt(user_input):
             retstr = user_input
-
     elif command == "EDT":
-        # Edit message
-        pass
+        if validate_edt(user_input):
+            retstr = user_input
     elif command == "RDM":
-        # Read message
-        pass
+        if validate_rdm(user_input):
+            retstr = user_input
     elif command == "ATU":
-        # Display active users
-        pass
+        if validate_atu(user_input):
+            retstr = user_input
     elif command == "OUT":
-        # Logout
         retstr = command
     else:
         retstr = None
-
-
     return retstr, command
 
 
@@ -136,10 +118,24 @@ def validate_time(str):
         True if string is in FORMAT
         None if string in not in FORMAT
     """
-    # str = " ".join(words[2:])
-    try:
+    try:   
         datetime.datetime.strptime(str, DATE_FORMAT)
     except ValueError:
+        return False
+    return True
+
+def validate_msg(input):
+    """
+    Validate Message
+    MSG MESSAGE
+    """
+    words = input.split(" ")
+    command = words[0]
+    msg = words[1:]
+    print(f"msg = {msg}")
+    if command != "MSG":
+        return False
+    if not msg:
         return False
     return True
 
@@ -167,12 +163,10 @@ def validate_edt(input):
     """
     Validate edit message input
     Format: EDT messagenumber timestamp message
-
     EDT 1 23 Feb 2021 16:01:25 message ajskdch hgsdc e 
     """
-
     words = input.split(" ")
-    print(words)
+    # print(words)
     if len(words) < 6:
         return False
     command = words[0]
@@ -188,11 +182,30 @@ def validate_edt(input):
         return False
     return True
 
+def validate_rdm(input):
+    # RDM timestamp
+    words = input.split(" ")
+    if len(words) != 5:
+        return False
+    command = words[0]
+    date_str = " ".join(words[1:5])
+    if command != "RDM":
+        return False
+    if not validate_time(date_str):
+        return False
+    return True
+
+def validate_atu(input):
+    words = input.split(" ")
+    if len(words) != 1:
+        return False
+    command = words[0]
+    if command != "ATU":
+        return False
+    return True
 
 
-
-
-
+    
 
 if __name__ == "__main__":
 

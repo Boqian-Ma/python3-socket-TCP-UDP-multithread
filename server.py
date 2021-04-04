@@ -80,7 +80,6 @@ def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr[0]} connected.")
 
     connected = True
-
     login_flag = False
 
     print(f"[Logining In] ...")
@@ -94,7 +93,6 @@ def handle_client(conn, addr):
         items = login_package.split(" ")
         username = items[0]
         password = items[1]
-    
         check_details = login(username, password)
         if check_details:
             # Logged in
@@ -142,7 +140,6 @@ def load_users():
         USERS.append(dict)
     # print(USERS)
 
-
 def log(message):
     """
     Log message into a log file
@@ -150,12 +147,9 @@ def log(message):
     pass
 
 
-
-
 if __name__ == "__main__":
     # serverName = 'localhost' #Server would be running on the same host as Client
     # tcpPort = int(sys.argv[2])
-
     # TODO: Check return values
     load_users()
     server_name, tcp_port = take_input()

@@ -1,0 +1,69 @@
+Backlog:
+- can users send empty messages (assuming they cant)
+
+
+
+Functionalities:
+- Message to server
+- edit, delete, read messages
+- 
+
+
+Stage one:
+
+- Create login details
+
+
+Stage two:
+- Create log
+- Log activities
+
+Stage three client side commends:
+MSG: Post Message
+DLT: Delete Message
+EDT: Edit Message
+RDM: Read Message
+ATU: Display active users
+OUT: Log out and UPD: Upload file
+
+
+
+Server code
+- Build server
+- Clean input argument 
+- Authentication
+    - Get username and password
+    - Read credentias.txt
+    - Check username
+    - return error
+        - start timing loop and lock user out
+        - Lock user login 
+    
+
+
+Client 
+- Connect TCP
+- Bind UDP
+- Clean input argument and raise error
+
+- Estabilish connection
+
+- Authentication loop
+    - Login
+
+- Command loop
+
+# Starting a server
+python3 server.py localhost 1025
+
+# Starting a client
+python3 client.py localhost 1025
+
+
+
+
+
+Date format:
+- %d %b %Y %H:%M:%S
+- 23 Feb 2021 16:01:25
+

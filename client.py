@@ -7,7 +7,7 @@ import datetime
 STATE = 0 # logout = 0, login = 1
 FORMAT = "utf-8"
 
-WELCOME = "Enter one of the following commands (MSG, DLT, EDT, RDM, ATU, OUT)"
+WELCOME = "Enter one of the following commands (MSG, DLT, EDT, RDM, ATU, OUT):"
 DATE_FORMAT = "%d %b %Y %H:%M:%S"
 def take_input():
     parser = argparse.ArgumentParser()
@@ -21,6 +21,12 @@ def take_input():
     return server_name, tcp_port #, udp_port
 
 def send_message(msg, tcp_client):
+    '''
+    Encode and send a message
+
+    Output: 
+        decoded response message from server
+    '''
     message = msg.encode(FORMAT)
     tcp_client.send(message)
     response = tcp_client.recv(2048).decode(FORMAT)
@@ -45,15 +51,22 @@ def connect(tcp_client):
     print("Select from the following options to continue...")
     while connected:
         input_msg = str(input(WELCOME))
+
+        # Validate input
         retstr = user_actions(input_msg)
         if retstr is None:
             print("[INVALID COMMAND] Please try again...")
             continue
+
+        # If clients requests to disconnect
         if retstr == "OUT":
             # Log out
             connected = False
             response = send_message(input_msg, tcp_client)
             print(f"[SERVER RESPOND] {response}")
+            continue
+        
+        # Send message 
         response = send_message(input_msg, tcp_client)
         print(f"[SERVER RESPOND] {response}")
     return
@@ -215,12 +228,14 @@ if __name__ == "__main__":
     tcp_client = socket(AF_INET, SOCK_STREAM)
     tcp_client.connect(TCP_ADDR)
    
-    connect(tcp_client)
-    # connect(tcp_client)
-    # send_message("yeet 1", tcp_client)
-    # send_message("yeet 2", tcp_client)
-    # send_message("!", tcp_client)
-    # Create UDP client socket 
+    try:
+        connect(tcp_client)
+    except KeyboardInterrupt:
+        send_message("OUTX", tcp_client)
+        
+
+
+
     # TODO: Stage 2
     # udp_client = socket(AF_INET, SOCK_DGRAM)
     # udp_client.bind(UDP_ADDR)

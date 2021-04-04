@@ -111,9 +111,12 @@ def handle_client(conn, addr):
         while connected:
             msg = conn.recv(1024).decode(FORMAT)
             print(f"[INCOMING MESSAGE] {msg}")
-            if msg == "!":
+            if msg == "OUT":
                 response = "SUCCESS: LOGOUT".encode(FORMAT)
                 connected = False
+            elif msg == "OUTX":
+                connected = False
+                print("OUTX")
             else:
                 response = "YEET Back at you".encode(FORMAT)
             conn.send(response)

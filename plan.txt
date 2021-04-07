@@ -1,19 +1,15 @@
 Backlog:
 - can users send empty messages (assuming they cant)
 
+- cancel disconnect on keyboard interrupts
 
 
 Functionalities:
 - Message to server
 - edit, delete, read messages
 - 
-
-
 Stage one:
-
 - Create login details
-
-
 Stage two:
 - Create log
 - Log activities
@@ -27,6 +23,25 @@ ATU: Display active users
 OUT: Log out and UPD: Upload file
 
 
+07/04/2021
+- handled repeated login
+- handled logout during authentication
+
+- Test multithreading 
+    - Keep track of # of users (port number? ip?)
+
+- Log actions
+- Log messages (seperate log?)
+- Server handle actions
+    - MSG: Post Message
+    - DLT: Delete Message
+    - EDT: Edit Message
+    - RDM: Read Message
+    - ATU: Display active users
+    - OUT: Log out and UPD: Upload file
+
+
+
 
 Server code
 - Build server
@@ -38,19 +53,13 @@ Server code
     - return error
         - start timing loop and lock user out
         - Lock user login 
-    
-
-
 Client 
 - Connect TCP
 - Bind UDP
 - Clean input argument and raise error
-
 - Estabilish connection
-
 - Authentication loop
     - Login
-
 - Command loop
 
 # Starting a server

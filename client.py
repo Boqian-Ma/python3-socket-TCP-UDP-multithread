@@ -32,7 +32,6 @@ def send_message(msg, tcp_client):
     response = tcp_client.recv(2048).decode(FORMAT)
     return response
 
-
 def connect(tcp_client):
     connected = False
     # Login 
@@ -221,7 +220,6 @@ def validate_atu(input):
     
 
 if __name__ == "__main__":
-
     # tcp_port = generate_port()
     server_name, target_TCP_port = take_input()
     TCP_ADDR = (server_name, target_TCP_port)
@@ -232,10 +230,6 @@ if __name__ == "__main__":
         connect(tcp_client)
     except KeyboardInterrupt:
         send_message("OUTX", tcp_client)
-        
-
-
-
     # TODO: Stage 2
     # udp_client = socket(AF_INET, SOCK_DGRAM)
     # udp_client.bind(UDP_ADDR)

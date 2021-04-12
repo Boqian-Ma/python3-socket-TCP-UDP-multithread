@@ -1,8 +1,11 @@
 Backlog:
-- can users send empty messages (assuming they cant)
-
 - cancel disconnect on keyboard interrupts
 
+Improvement
+- More customised error messages
+
+Assumptions:
+- User name is in one word (no space in between)
 
 Functionalities:
 - Message to server
@@ -26,19 +29,26 @@ OUT: Log out and UPD: Upload file
 07/04/2021
 - handled repeated login
 - handled logout during authentication
-
-- Test multithreading 
+- Tested multithreading 
     - Keep track of # of users (port number? ip?)
+- Created udp port in client
+
+- use list to track first
+    - created list to tack users
+    
 
 - Log actions
 - Log messages (seperate log?)
+
+12/04/2021
 - Server handle actions
-    - MSG: Post Message
-    - DLT: Delete Message
-    - EDT: Edit Message
-    - RDM: Read Message
-    - ATU: Display active users
-    - OUT: Log out and UPD: Upload file
+    - MSG: Post Message (done)
+    - DLT: Delete Message 
+    - EDT: Edit Message 
+    - RDM: Read Message 
+    - ATU: Display active users (done)
+    - OUT: Log out (done) 
+    - UPD: Upload file 
 
 
 

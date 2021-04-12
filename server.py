@@ -4,39 +4,59 @@ import threading
 import sys
 import argparse
 import logging
+from datetime import datetime
+
+DATE_FORMAT = "%d %b %Y %H:%M:%S"
+
 """
 USERS = [
     {
         "username",
         "password",
         "login"
+        "tcp_port"
+        "udp_port"
+        "active_since"
+        "ip",
     }
 ]
 
-MESSAGES = {
-    date : []
-}
+MESSAGES = [
+    {
+        "username",
+        "timestamp",
+        "message",
+        "edited",
+    }
+
+]
 
 ACTIVE_USERS = [
     {
         "username",
+        "active_since",
         "ip",
-        "port"
+        "tcp_port",
+        "udp_port",
+        "active_since"
     }
 ]
+
+Tracking active users
+refresh doc
 """
+
+
 
 FORMAT = "utf-8"
 USERS = []
-MESSAGES = {}
+MESSAGES = []
 ACTIVE_USERS = []
-
-LOG = open('log.txt', "a+")
-
+CONNECTIONS = []
+# LOG = open('log.txt', "a+")
 # class active_user:
 #     def __init__(username, ip, port_num):
 #         self.username = username
-
 # LOG = logging.getLogger("log")
 
 def take_input():
@@ -63,11 +83,11 @@ def start(server, ADDR):
     while True:
         # Handle multithreding
         conn, addr = server.accept()
+        CONNECTIONS.append(conn)
         thread = threading.Thread(target=handle_client, args=(conn, addr))
         thread.start()
 
-
-def login(username, password):
+def login(username, password, udp_port, addr):
     """
     Check user credentials 
     Returns:
@@ -80,10 +100,14 @@ def login(username, password):
         if u["username"] == username:
             if u["password"] == password and u["login"] is False:
                 u["login"] = True
-                print(u)
+                u["udp_port"] = udp_port
+                u["ip"] = addr[0]
+                u["tcp_port"] = addr[1]
+                u["active_since"] = datetime.now().strftime(DATE_FORMAT)
                 return True
             return False
     return False
+
 
 # def add_login_user(username, ip, portnumber) {
 #     new_user = {
@@ -104,7 +128,6 @@ def handle_client(conn, addr):
     counter = 0
     # TODO: Change max to dynamic input value
     max = 3
-
     # Login
     while login_flag == False and counter < max:
         login_package = conn.recv(1024).decode(FORMAT)
@@ -113,11 +136,13 @@ def handle_client(conn, addr):
             # Log out on keyboard interrupt
             connected = False
             break
-
+        
         items = login_package.split(" ")
         username = items[0]
         password = items[1]
-        check_details = login(username, password)
+        udp_port = items[2]
+
+        check_details = login(username, password, udp_port, addr)
         if check_details:
             # Logged in
             login_flag = True
@@ -133,27 +158,128 @@ def handle_client(conn, addr):
     if login_flag == True:
         print(f"[LOGIN SUCCESS] {addr} Logged in...")
         while connected:
-            msg = conn.recv(1024).decode(FORMAT)
+            msg = conn.recv(2048).decode(FORMAT)
             print(f"[INCOMING MESSAGE] {msg}")
-            if msg == "OUT":
-                response = "SUCCESS: LOGOUT".encode(FORMAT)
+
+            response, logout = handle_requests(msg)
+
+            if response is not None:
+                response = response.encode(FORMAT)
+            
+            if logout is True:
+                if response == "OUT":
+                    response = "SUCCESS: LOGOUT".encode(FORMAT)
                 connected = False
-            elif msg == "OUTX":
-                # Log out on keyboard interrupt
-                connected = False
-                print("OUTX")
-                continue
-            else:
-                # Process message
-                response = "YEET Back at you".encode(FORMAT)
+            
             conn.send(response)
+            print(MESSAGES)
     conn.close()
     print(f"[CLOSED CONNECTION] {addr} closed.")
     return
 
-def load_users():
+def handle_out(current_user):
+    global USERS
     """
-    Load all registered users and password
+    Logout an user
+    """
+    for user in USERS:
+        if user["username"] == current_user:
+            user["login"] = False
+    
+def handle_requests(msg):
+    words = msg.split(" ")
+    print(f"message = {msg}")
+    command = words[0]
+    # User name
+    current_user = words[-1]
+    # Message
+    msg = words[:-1] # excluding username
+    response = None 
+    logout = False
+    if command == "MSG":
+        response = handle_msg(msg, current_user)
+    
+    elif command == "DLT":
+        print("DLT command received but havent implemented")
+    
+    elif command == "EDM":
+        print("EDM command received but havent implemented")
+    
+    elif command == "RDM":
+        print("RDM command received but havent implemented")
+    
+    elif command == "ATU":
+        # print("ATU command received but havent implemented")
+        response = handle_atu(current_user)
+        
+    elif command == "OUT" or command == "OUTX":
+        handle_out(current_user)    # logout current user
+        response = "OUT"
+        logout = True
+    else:
+        print("Invalid command, check implementation please")
+    return response, logout
+
+
+def handle_msg(msg, current_user):
+    # msg[0] is command
+    message = " ".join(msg[1:])
+    create_message(current_user, message)
+    return "Message Sent Successfully"
+
+def create_message(username, message):
+    global MESSAGES
+    '''
+    Create a message and append to messages, update textfile
+    '''
+    msg = {
+        "username": username,
+        "message": message,
+        "edited": False,
+        "timestamp": datetime.now().strftime(DATE_FORMAT)
+    }
+    MESSAGES.append(msg)
+
+def handle_atu(current_user):
+    '''
+    Handles an AUT request
+    Returns 
+        a string of active users and their IP and UDP port if there is any
+
+    Else returns "No Active Users"
+    '''
+
+    global USERS
+
+    if current_user is None:
+        return "No Other Active Users"
+    
+    active_users = []
+
+    for user in USERS:
+        if user["login"] is True and user["username"] != current_user:
+            s = ""
+            s += user["username"]
+            s += " "
+            s += user["ip"] 
+            s += " udp/"
+            s += user["udp_port"]
+            active_users.append(s)
+    
+    if len(active_users) == 0:
+        return "No Other Active Users"
+    
+    retstr = "\n".join(active_users)
+
+    # print(f"actuve users = {active_users} retstr = {retstr}")
+    return retstr
+    
+
+
+def load_users():
+    global USERS
+    """
+    Load all registered users and password from txt file
     """
     credentials = open("credentials.txt", "r")
     users = [user[:-1] if user[-1] == "\n" else user for user in credentials]
@@ -165,7 +291,11 @@ def load_users():
         dict = {
             "username" : username,
             "password" : password,
-            "login"   : False
+            "login"   : False,
+            "udp_port": None,
+            "tcp_port": None,
+            "ip": None,
+            "last_active": None
         }
         USERS.append(dict)
     # print(USERS)
@@ -190,10 +320,10 @@ if __name__ == "__main__":
     try:
         start(server, TCP_ADDR)
     except KeyboardInterrupt:
-        LOG.close()
+        # LOG.close()
         # Close all connection
         for thread in threading.enumerate(): 
-            print(thread.name)
+            print(thread)
         server.close()
     print("\n[EXIT]")
     

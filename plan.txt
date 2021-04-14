@@ -3,9 +3,28 @@ Backlog:
 
 Improvement
 - More customised error messages
+- Using *.log instead of .txt to log information
+- Load logs upon server start
+- Include authentication token during each transaction to improve security
+- Inform all users when server shuts down
+- Include concurrent update mechnism 
+
+
 
 Assumptions:
-- User name is in one word (no space in between)
+- User name is always one word (no space in between)
+
+
+Server design considerations:
+- Data structure
+- Client keyboard interrupt
+
+Client design considerations:
+- All formating checks are done in client to reduce server workload
+- Data structure
+
+
+
 
 Functionalities:
 - Message to server
@@ -35,22 +54,36 @@ OUT: Log out and UPD: Upload file
 
 - use list to track first
     - created list to tack users
-    
-
 - Log actions
 - Log messages (seperate log?)
 
 12/04/2021
 - Server handle actions
     - MSG: Post Message (done)
-    - DLT: Delete Message 
-    - EDT: Edit Message 
-    - RDM: Read Message 
     - ATU: Display active users (done)
     - OUT: Log out (done) 
-    - UPD: Upload file 
+    - UPD: Upload file  
+
+13/04/2021 AM 
+- RDM: Read Message  (done)
+- EDT: Edit Message  (done)
+    #3, Obi-wan: Computer Network Rocks, edited at 23 Feb 2021 16:01:10.
+    #4, Obi-wan: IoT Rocks, posted at 23 Feb 2021 16:01:30
+- DLT: Delete Message (done)
+- Blocking after attempts (done)
+- Messages are numbered starting from one
 
 
+
+TODO:
+- Logging after server action
+    - MSG
+    - EDT
+    - DLT
+    - LOGIN
+    - LOGOUT
+
+- Commenting and documentation 
 
 
 Server code
@@ -76,13 +109,26 @@ Client
 python3 server.py localhost 1025
 
 # Starting a client
-python3 client.py localhost 1025
+python3 client.py localhost 1025 10000
 
 
 
-
+RDM 23 Feb 2021 16:01:30
 
 Date format:
 - %d %b %Y %H:%M:%S
 - 23 Feb 2021 16:01:25
 
+
+
+
+Testing Command
+
+RDM:
+    - RDM 13 Apr 2021 12:14:40
+EDT:
+    - EDT messagenumber timestamp message
+    - EDT 0 14 Apr 2021 17:04:11 messges modified to yeeeeet
+DLT: 
+    - DLT messagenumber timestamp
+    - DLT 1 14 Apr 2021 22:50:51

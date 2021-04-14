@@ -85,7 +85,6 @@ def test_validate_rdm():
 def test_validate_atu():
     res = validate_atu("ATU")
     assert(res == True)
-
     res = validate_atu("ATU asdc")
     assert(res == False)
 

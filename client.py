@@ -50,33 +50,40 @@ def connect(tcp_client, udp_port):
         package = username + " " + password + " " + str(udp_port)
         # Send login details
         response = send_message(package, tcp_client)
-        if str(response) == "SUCCESS: LOGIN":
+        if str(response) == "LOGIN: SUCCESS":
             connected = True
             print("Login Succeed...")
             CURRENT_USER = username
-        else:
+        elif str(response) == "LOGIN: FAILED":
             print("Please Check Login Details...")
+        else:
+            words = str(response).split(" ")
+            sec_left = words[-1]
+            print("Reached Maximum Attampts, Please Try Again in " + sec_left + " Seconds\nShutting Down...")
+            # Close connection
+            break
 
-    print("Select from the following options to continue...")
+    # print("Select from the following options to continue...")
     while connected:
         input_msg = str(input(WELCOME))
         # Validate input
 
         retstr, _ = user_actions(input_msg)
         if retstr is None:
-            print("[INVALID COMMAND] Please try again...")
+            print("[INVALID COMMAND]\nPlease try again...")
             continue
+        
         if retstr == "OUT":
             # Log out
             connected = False
-            response = send_message(retstr + " " + CURRENT_USER, tcp_client)
-            print(f"[SERVER RESPOND] {response}")
+            _ = send_message(retstr + " " + CURRENT_USER, tcp_client)
+            print(f"Logging Out...")
             continue
 
         retstr += " " + CURRENT_USER
-
         response = send_message(retstr, tcp_client)
-        print(f"[SERVER RESPOND] {response}")
+        print(f"[SERVER RESPOND]\n{response}")
+    
     return
 
 def user_actions(user_input):

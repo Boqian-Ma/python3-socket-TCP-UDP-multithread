@@ -8,6 +8,7 @@ Improvement
 - Include authentication token during each transaction to improve security
 - Inform all users when server shuts down
 - Include concurrent update mechnism 
+- Handle error messages better
 
 
 
@@ -75,6 +76,11 @@ OUT: Log out and UPD: Upload file
 - Blocking after attempts (done)
 - Messages are numbered starting from one
 
+15/04/2021
+- Logging active users
+    - refresh log when user login
+    - refresh log when user logout
+
 
 
 TODO:
@@ -108,7 +114,7 @@ Client
 - Command loop
 
 # Starting a server
-python3 server.py localhost 1025
+python3 server.py localhost 1025 5
 
 # Starting a client
 python3 client.py localhost 1025 10000
@@ -130,7 +136,7 @@ RDM:
     - RDM 13 Apr 2021 12:14:40
 EDT:
     - EDT messagenumber timestamp message
-    - EDT 0 14 Apr 2021 17:04:11 messges modified to yeeeeet
+    - EDT 1 15 Apr 2021 13:45:42 messges modified to yeeeeet
 DLT: 
     - DLT messagenumber timestamp
     - DLT 1 14 Apr 2021 22:50:51

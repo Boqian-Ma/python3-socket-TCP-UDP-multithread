@@ -4,14 +4,9 @@ import threading
 import sys
 import argparse
 import logging
-
 from datetime import datetime
-
 import datetime as d
 
-DATE_FORMAT = "%d %b %Y %H:%M:%S"
-
-ZERO_OFFSET = 1
 """
 USERS = [
     {
@@ -30,38 +25,70 @@ USERS = [
 MESSAGES = [
     {
         "username",
-        "timestamp",
+        "last_modified",
         "message",
         "edited",
     }
 ]
 
-ACTIVE_USERS = [
-    {
-        "username",
-        "active_since",
-        "ip",
-        "tcp_port",
-        "udp_port",
-        "active_since"
-    }
-]
-
-Tracking active users
-refresh doc
 """
 
+DATE_FORMAT = "%d %b %Y %H:%M:%S"
+ZERO_OFFSET = 1
 FORMAT = "utf-8"
 USERS = []
 MESSAGES = []
-ACTIVE_USERS = []
-CONNECTIONS = []
 MAX_LOGIN_ATTAMPTS = 1
-# LOG = open('log.txt', "a+")
-# class active_user:
-#     def __init__(username, ip, port_num):
-#         self.username = username
-# LOG = logging.getLogger("log")
+CONNECTIONS = []
+
+
+
+def update_message_log():
+
+    global MESSAGES
+    message_log = open('messagelog.txt', "w+")
+    i = 1
+
+    all_messages = []
+
+    for m in MESSAGES:
+        entry = str(i) + "; "
+        entry += m["last_modified"] + "; "
+        entry += m["username"] + "; "
+        entry += m["message"] + "; "
+        if m["edited"]:
+            entry += "yes"
+        else:
+            entry += "no"
+        all_messages.append(entry)
+        i += 1
+    
+    message_log.write("\n".join(all_messages))
+    message_log.close()
+
+
+def update_user_log():
+    """
+    Update userlog.txt
+    """
+    global USERS
+    user_log = open('userlog.txt', "w+")
+    i = 1
+    all_users = []
+    for u in USERS:
+        if u['login'] is True:
+            entry = str(i) + "; "
+            entry += (u["active_since"] + "; ")
+            entry += (u["username"] + "; ")
+            entry += (u["ip"] + "; ")
+            entry += u["udp_port"]
+            all_users.append(entry)
+            i += 1
+    user_log.write("\n".join(all_users))
+    user_log.close()
+
+
+
 
 def take_input():
     """
@@ -97,13 +124,6 @@ def start(server, ADDR):
         thread = threading.Thread(target=handle_client, args=(conn, addr))
         thread.start()
 
-
-# ERRLOG_INPUT = -1 # Wrong input format
-# ERRLOG_FP = 0 # Correct username, wrong password
-# ERRLOG_FU = 1 # Username not in directory
-# ERRLOG_TIME = 2 # User forbid to login because of timeout
-# ERRLOG_
-
 def login(username, password, udp_port, addr):
     """
     Check user credentials 
@@ -138,8 +158,10 @@ def login(username, password, udp_port, addr):
                 u["ip"] = addr[0]
                 u["tcp_port"] = addr[1]
                 u["active_since"] = datetime.now().strftime(DATE_FORMAT)
+
                 return True, False
             # add an attampt because failed passedword
+
             u["login_attampts"] =+ 1
 
             # Max attampts reached
@@ -173,7 +195,7 @@ def handle_client(conn, addr):
         login_package = conn.recv(1024).decode(FORMAT)
         # logout duing checkin 
         if login_package == "OUTX":
-            # Log out on keyboard interrupt
+            # Log out on keyboard interrupt during login
             connected = False
             break
         
@@ -185,7 +207,6 @@ def handle_client(conn, addr):
         check_details, time_left_str = login(username, password, udp_port, addr)
 
         # check login counter
-
         if time_left_str is not False:
             response = "LOGIN: REACHED MAXIMUM ATTAMPTS " + time_left_str
             response = response.encode(FORMAT)
@@ -205,7 +226,8 @@ def handle_client(conn, addr):
 
     # Messaging
     if login_flag == True:
-        print(f"[LOGIN SUCCESS] {addr} Logged in...")
+        print(f"[LOGIN SUCCESS] {username}:{addr} Logged in...")
+        update_user_log()
         while connected:
             msg = conn.recv(2048).decode(FORMAT)
             print(f"[INCOMING MESSAGE] {msg}")
@@ -223,16 +245,17 @@ def handle_client(conn, addr):
                 connected = False
 
             conn.send(response)
-            print(MESSAGES)
     conn.close()
-    print(f"[CLOSED CONNECTION] {addr} closed.")
+    print(f"[CLOSED CONNECTION] {username}:{addr} closed.")
     return
 
 def print_active_users():
-
+    """
+    Debug
+    """
     for u in USERS:
         if u['login'] is True:
-            print(u["username"])
+            print(u)
 
 def handle_out(current_user):
     global USERS
@@ -272,8 +295,13 @@ def handle_requests(msg):
         handle_out(current_user)
         response = "OUT"
         logout = True
+        update_user_log()   # Update user log
+
     else:
         print("Invalid command, check implementation please")
+
+    update_message_log() # Update message log
+
     return response, logout
 
 def handle_edt(msg, current_user):
@@ -299,7 +327,7 @@ def handle_edt(msg, current_user):
     MESSAGES[msg_num]["edited"] = True
     MESSAGES[msg_num]["message"] = new_message
     now = datetime.now().strftime(DATE_FORMAT)
-    MESSAGES[msg_num]["timestamp"] = now
+    MESSAGES[msg_num]["last_modified"] = now
 
     return "#" + str(msg_num) + "; " + now + "; " + current_user + "; " + "edited" 
 
@@ -311,7 +339,7 @@ def find_message(msg_num, timestamp, current_user):
     global MESSAGES
     try:
         m = MESSAGES[msg_num]
-        m_timestamp = datetime.strptime(m["timestamp"], DATE_FORMAT)
+        m_timestamp = datetime.strptime(m["last_modified"], DATE_FORMAT)
         if m_timestamp == timestamp and m["username"] == current_user:
             return True
     except IndexError:
@@ -327,13 +355,6 @@ def handle_dlt(msg, current_user):
     msg_num = int(msg[1]) - ZERO_OFFSET
     timestamp_str = " ".join(msg[2:])    
     timestamp = datetime.strptime(timestamp_str, DATE_FORMAT)
-    # i = 0
-    # for m in MESSAGES:
-    #     m_timestamp = datetime.strptime(m["timestamp"], DATE_FORMAT)
-    #     if m_timestamp == timestamp and m["username"] == current_user and i == msg_num:
-    #         MESSAGES.remove(m)
-    #         removed = True
-    #     i += 1
 
     deleted_message = find_message(msg_num, timestamp, current_user)
 
@@ -367,7 +388,7 @@ def get_messages(timestamp):
     messages = []
     i = 0
     for m in MESSAGES:
-        m_timestamp = datetime.strptime(m["timestamp"], DATE_FORMAT)
+        m_timestamp = datetime.strptime(m["last_modified"], DATE_FORMAT)
         if m_timestamp >= timestamp:
             messages.append((m, i))
         i += 1
@@ -397,7 +418,7 @@ def message_list_to_string(messages):
             s += "edited at "
         else:
             s += "posted at "
-        s += message["timestamp"]
+        s += message["last_modified"]
         strs.append(s)
     
     retstr = "\n".join(strs)
@@ -420,7 +441,7 @@ def create_message(username, message):
         "username": username,
         "message": message,
         "edited": False,
-        "timestamp": datetime.now().strftime(DATE_FORMAT)
+        "last_modified": datetime.now().strftime(DATE_FORMAT)
     }
     MESSAGES.append(msg)
 
@@ -473,7 +494,7 @@ def load_users():
             "udp_port": None,
             "tcp_port": None,
             "ip": None,
-            "last_active": None,
+            "active_since": None,
             "can_login_after": datetime.now().strftime(DATE_FORMAT),
             "login_attampts": 0
         }
@@ -494,8 +515,6 @@ if __name__ == "__main__":
 
     input_dict = take_input()
 
-
-
     TCP_ADDR = (input_dict["server_name"], input_dict["tcp_port"])
     server = socket(AF_INET, SOCK_STREAM)
     server.bind(TCP_ADDR)
@@ -503,10 +522,10 @@ if __name__ == "__main__":
     try:
         start(server, TCP_ADDR)
     except KeyboardInterrupt:
-        # LOG.close()
-        # Close all connection
-        # for thread in threading.enumerate(): 
-        #     print(thread)
+
+        for c in CONNECTIONS:
+            c.close()
+
         server.close()
     print("\n[EXIT SERVER]")
     

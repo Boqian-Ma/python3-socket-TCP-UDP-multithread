@@ -28,9 +28,4 @@ USERS = [
     }
 ]
 
-# def test_handle_aut():
-#     response = handle_aut(USERS)
-#     assert(response == "boqian 1.1.1.1 udp/1\nadam 1.1.1.1 udp/1")
 
-#     response = handle_aut([])
-#     assert(response == "No Active Users")

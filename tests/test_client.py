@@ -16,6 +16,12 @@ def test_validate_msg():
     res = validate_msg("MSG ".rstrip())
     assert(res == False)
 
+def test_validate_upd():
+    res = validate_upd("UPD acdh ahdcia")
+    assert(res == True)
+    res = validate_msg("UPD abc")
+    assert(res == False)
+
 def test_validate_dlt():
     res = validate_dlt("DLT 1 23 Feb 2021 16:01:25")
     assert(res == True)
@@ -88,3 +94,47 @@ def test_validate_atu():
     res = validate_atu("ATU asdc")
     assert(res == False)
 
+def test_parse_atu():
+    response = "adam 127.0.0.1 udp/10000"
+    list = parse_atu(response)
+    assert(list == [{
+        "username": "adam",
+        "ip": "127.0.0.1",
+        "udp_port": 10000
+    }])
+
+    response = "adam 127.0.0.1 udp/10000\nadam1 127.0.0.2 udp/10001"
+    list = parse_atu(response)
+    assert(list == [{
+        "username": "adam",
+        "ip": "127.0.0.1",
+        "udp_port": 10000
+    },
+    {
+        "username": "adam1",
+        "ip": "127.0.0.2",
+        "udp_port": 10001
+    }])
+
+def test_get_udp_dest():
+    retstr = "UPD adam file.exe adam1"
+    user_list = [{
+        "username": "adam",
+        "ip": "127.0.0.1",
+        "udp_port": 10000
+    },
+    {
+        "username": "adam1",
+        "ip": "127.0.0.2",
+        "udp_port": 10001
+    }]
+    ret = get_udp_dest(user_list, retstr)
+    assert(ret == {
+        "dest_ip": "127.0.0.1",
+        "dest_port": 10000,
+        "file_path": "file.exe"
+    })
+
+    retstr = "UPD jake file.exe adam1"
+    ret = get_udp_dest(user_list, retstr)
+    assert(ret == None)

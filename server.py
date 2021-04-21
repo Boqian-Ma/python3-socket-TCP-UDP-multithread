@@ -30,7 +30,6 @@ MESSAGES = [
         "edited",
     }
 ]
-
 """
 
 DATE_FORMAT = "%d %b %Y %H:%M:%S"
@@ -38,13 +37,15 @@ ZERO_OFFSET = 1
 FORMAT = "utf-8"
 USERS = []
 MESSAGES = []
-MAX_LOGIN_ATTAMPTS = 1
-CONNECTIONS = []
+MAX_LOGIN_ATTAMPTS = 5
+CONNECTIONS = [] # All connection threads
 
 
 
 def update_message_log():
-
+    '''
+    Update message log file
+    '''
     global MESSAGES
     message_log = open('messagelog.txt', "w+")
     i = 1
@@ -93,7 +94,6 @@ def update_user_log():
 def take_input():
     """
     Take input from command line
-    TODO: Implement UDP
     """
     global MAX_LOGIN_ATTAMPTS
     parser = argparse.ArgumentParser()
@@ -114,7 +114,11 @@ def take_input():
 def start(server, ADDR):
     """
     Start a server
+
+    arg1: server <socket> TCP server socket
+    arg2: ADDR <tuple> Server IP and server TCP port
     """
+
     server.listen()
     print(f"[LISTENING] Server is listening on {ADDR[0]}:{ADDR[1]}")
     while True:
@@ -122,11 +126,18 @@ def start(server, ADDR):
         conn, addr = server.accept()
         CONNECTIONS.append(conn)
         thread = threading.Thread(target=handle_client, args=(conn, addr))
+        thread.deamon = True
         thread.start()
-
+    
 def login(username, password, udp_port, addr):
     """
     Check user credentials 
+
+    arg1: username <string> user name supplied by user on command line
+    arg2: password <string> password supplied by user on command line
+    arg3: udp_port <string> client udp server port
+    arg4: addr <tuple> IP and TCP port
+
     Returns:
         True if logged in
         False if unable to login
@@ -182,6 +193,13 @@ def login(username, password, udp_port, addr):
     return False, False
 
 def handle_client(conn, addr):
+    '''
+    Handles a new client connection
+
+    arg1: conn <socket> new socket representing the connection
+    arg2: addr <tuple> incomping connection ip and port
+    '''
+
     print(f"[NEW CONNECTION] {addr} connected.")
 
     connected = True
@@ -226,12 +244,11 @@ def handle_client(conn, addr):
 
     # Messaging
     if login_flag == True:
-        print(f"[LOGIN SUCCESS] {username}:{addr} Logged in...")
+        print(f"[LOGIN SUCCEED] {username}:{addr} Logged in...")
         update_user_log()
         while connected:
             msg = conn.recv(2048).decode(FORMAT)
-            print(f"[INCOMING MESSAGE] {msg}")
-
+            
             response, logout = handle_requests(msg)
 
             # Normal Respond 
@@ -246,27 +263,30 @@ def handle_client(conn, addr):
 
             conn.send(response)
     conn.close()
-    print(f"[CLOSED CONNECTION] {username}:{addr} closed.")
+    print(f"[CLOSED CONNECTION] {username}:{addr} closed...")
     return
 
-def print_active_users():
-    """
-    Debug
-    """
-    for u in USERS:
-        if u['login'] is True:
-            print(u)
+
 
 def handle_out(current_user):
+    '''
+    Log out current user
+
+    '''
     global USERS
-    """
-    Logout an user
-    """
+
     for user in USERS:
         if user["username"] == current_user:
             user["login"] = False
     
 def handle_requests(msg):
+    '''
+    Handle all incoming requests
+
+    Returns: 
+        ret1: response <string> Response to client request
+        ret2: command <string> The command client sent
+    '''
     words = msg.split(" ")
     command = words[0]
     # User name
@@ -275,6 +295,8 @@ def handle_requests(msg):
     msg = words[:-1] # excluding username
     response = None 
     logout = False
+
+    print(f"[INCOMING COMMAND] {current_user} issued {command} command")
 
     if command == "MSG":
         response = handle_msg(msg, current_user)
@@ -298,19 +320,23 @@ def handle_requests(msg):
         update_user_log()   # Update user log
 
     else:
-        print("Invalid command, check implementation please")
+        print("[ERROR] Invalid command, check server implementation please")
 
     update_message_log() # Update message log
-
+    print(f"[SERVER RESPONSE] {response}")
     return response, logout
 
 def handle_edt(msg, current_user):
     '''
     Handle an edit message request: a message can only be deleted by the sender
     
-    msg: EDT messagenumber timestamp message
+    Format: EDT messagenumber timestamp message
 
-    Returns: Messagenumber; timestamp; username; message; edited
+    arg1: msg <string> Incoming edt request string
+    arg2: current_user <string> current user name
+
+    Returns: 
+        Messagenumber; timestamp; username; message; edited
     '''
     global MESSAGES
 
@@ -334,7 +360,13 @@ def handle_edt(msg, current_user):
 def find_message(msg_num, timestamp, current_user):
     '''
     Find a message
-    Returns True if found, False if not found
+    
+    arg1: msg_num <int> message number
+    arg2: timestamp <datetime> time of message sent
+    arg3: current_user <string> current user
+
+    Returns:
+        True if found, False if not found
     '''
     global MESSAGES
     try:
@@ -349,6 +381,12 @@ def find_message(msg_num, timestamp, current_user):
 def handle_dlt(msg, current_user):
     '''
     Handle a delete request: a message can only be deleted by the sender
+
+    arg1: msg_num <int> message number
+    arg2: current_user <string> current user
+
+    Returns:
+        msg <string>: DLT message
     '''
     global MESSAGES 
 
@@ -363,15 +401,16 @@ def handle_dlt(msg, current_user):
     
     m = MESSAGES[msg_num]
     MESSAGES.remove(m)
-
-    return "Message Removed Successfully"
+    
+    return "Message Removed Successfully at " + datetime.now().strftime(DATE_FORMAT)
 
 def handle_rdm(msg):
     '''
     Handle a read message request
-    Input:
-        <List> msg: a list of words in incoming request
-    Output:
+
+    arg1: msgs <list> : a list of words in incoming request
+
+    Returns:
         String response: a string containing response message
     '''
     timestamp_str = " ".join(msg[1:])
@@ -382,6 +421,9 @@ def handle_rdm(msg):
 def get_messages(timestamp):
     '''
     Retrive messages in this session after a timestamp
+
+    arg1: timestamp <datetime> the time we wish to view messages
+
     Returns:
         A string of all messages after a timestamp
     '''
@@ -403,8 +445,13 @@ def get_messages(timestamp):
 def message_list_to_string(messages):
     '''
     Change a list of messages to a string
-    Messages: a list of tuples (message dict, message number)
+
+    arg1: messages <list> : a list of tuples (message dict, message number)
+
+    Returns:
+        A string containing all messages, seperated by "\n"
     '''
+
     if len(messages) == 0:
         return None
     strs = []
@@ -427,14 +474,24 @@ def message_list_to_string(messages):
 def handle_msg(msg, current_user):
     '''
     Handle a MSG request
+
+    arg1: msg <string> 
+    arg2: current_user <string> Current user
+
+    Returns:
+        msg <string> response message
+
     '''
     message = " ".join(msg[1:])
     create_message(current_user, message)
-    return "Message Sent Successfully"
+    return "Message Sent Successfully at " + datetime.now().strftime(DATE_FORMAT)
 
 def create_message(username, message):
     '''
     Create a message and append to messages, update textfile
+
+    arg1: username <string> User who posted this message
+    arg2: message <string>  the message
     '''
     global MESSAGES
     msg = {
@@ -448,10 +505,12 @@ def create_message(username, message):
 def handle_atu(current_user):
     '''
     Handles an AUT request
+
+    arg1: current_user <string> current user's user name
+
     Returns 
         a string of active users and their IP and UDP port if there is any
-
-    Else returns "No Active Users"
+        Else returns "No Active Users"
     '''
 
     global USERS
@@ -500,19 +559,17 @@ def load_users():
         }
         USERS.append(dict)
 
-def log(message):
+def print_active_users():
     """
-    Log message into a log file
+    Debug
     """
-    pass
-
+    for u in USERS:
+        if u['login'] is True:
+            print(u)
 
 if __name__ == "__main__":
-    # serverName = 'localhost' #Server would be running on the same host as Client
-    # tcpPort = int(sys.argv[2])
-    # TODO: Check return values
-    load_users()
 
+    load_users()
     input_dict = take_input()
 
     TCP_ADDR = (input_dict["server_name"], input_dict["tcp_port"])
@@ -522,10 +579,8 @@ if __name__ == "__main__":
     try:
         start(server, TCP_ADDR)
     except KeyboardInterrupt:
-
         for c in CONNECTIONS:
             c.close()
-
         server.close()
     print("\n[EXIT SERVER]")
     

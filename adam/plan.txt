@@ -8,25 +8,26 @@ Improvement
 - Include authentication token during each transaction to improve security
 - Inform all users when server shuts down
 - Include concurrent update mechnism 
+- Handle error messages better
 - When an UPD request is made, an ATU request is first sent to server to get 
     - full list of users, then another request is sent to individual. Caching could improve performance
 
 UPD Improvement
-- Receiving threads
+- Receiving 
 
 Assumptions:
 - User name is always one word (no space in between)
 - During an UDP file transfer, it is assumed that the first packet (file name) is never lost, which is not true in reality
 
+
 Server design considerations:
 - Data structure
-- handle Client keyboard interrupt
+- Client keyboard interrupt
 
 Client design considerations:
 - All formating checks are done in client to reduce server workload
 - Data structure
 - Concurrent send files to multiple peers
-- handle Key board interrupt
 
 
 
@@ -97,16 +98,7 @@ OUT: Log out and UPD: Upload file
         - also start a look to connect with clients
     - locks when transfering files and receiving files
 
-21/04/2021
-- Finished p2p file transfer
-- Redid server display message
-    - MSG: Post Message
-    - DLT: Delete Message
-    - EDT: Edit Message
-    - RDM: Read Message
-    - ATU: Display active users
-    - OUT: Log out and 
-    - UPD: Upload file
+
 
 TODO:
 - Logging after server action

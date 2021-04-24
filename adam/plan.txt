@@ -30,8 +30,6 @@ Client design considerations:
 - Concurrent send files to multiple peers
 
 
-
-
 Functionalities:
 - Message to server
 - edit, delete, read messages

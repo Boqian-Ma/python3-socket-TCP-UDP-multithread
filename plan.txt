@@ -11,6 +11,8 @@ Improvement
 - When an UPD request is made, an ATU request is first sent to server to get 
     - full list of users, then another request is sent to individual. Caching could improve performance
 
+
+
 UPD Improvement
 - Receiving threads
 
@@ -29,12 +31,9 @@ Client design considerations:
 - handle Key board interrupt
 
 
-
-
 Functionalities:
 - Message to server
 - edit, delete, read messages
-- 
 Stage one:
 - Create login details
 Stage two:

@@ -47,7 +47,7 @@ def update_message_log():
     Update message log file
     '''
     global MESSAGES
-    message_log = open('messagelog.txt', "w+")
+    message_log = open('logs/messagelog.txt', "w+")
     i = 1
 
     all_messages = []
@@ -73,7 +73,7 @@ def update_user_log():
     Update userlog.txt
     """
     global USERS
-    user_log = open('userlog.txt', "w+")
+    user_log = open('logs/userlog.txt', "w+")
     i = 1
     all_users = []
     for u in USERS:
@@ -87,8 +87,6 @@ def update_user_log():
             i += 1
     user_log.write("\n".join(all_users))
     user_log.close()
-
-
 
 
 def take_input():

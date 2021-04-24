@@ -203,7 +203,6 @@ def handle_client(conn, addr):
     connected = True
     login_flag = False
 
-    # print(f"[Logining In] ...")
     login_attampt_counter = 0
 
     # Login

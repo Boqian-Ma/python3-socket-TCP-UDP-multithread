@@ -171,7 +171,7 @@ def upd_recv_handler():
                 os.makedirs(os.path.dirname(cur_user_dir))
             except OSError as exc: # Guard against race condition
                 if exc.errno != errno.EEXIST:
-                    print("[ERROR] Failed to save file to user directory")
+                    print("[ERROR] Failed to create directory to save files")
                     return
 
         file = open(cur_user_dir, "wb+")

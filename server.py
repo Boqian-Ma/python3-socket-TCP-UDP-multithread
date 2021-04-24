@@ -6,8 +6,11 @@ import argparse
 import logging
 from datetime import datetime
 import datetime as d
+import os
+import errno
 
 """
+Global data structures
 USERS = [
     {
         "username",
@@ -47,6 +50,15 @@ def update_message_log():
     Update message log file
     '''
     global MESSAGES
+
+    if not os.path.exists(os.path.dirname("logs/")):
+        try:
+            os.makedirs(os.path.dirname("logs/"))
+        except OSError as exc: # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                print("[ERROR] Failed to create log directory")
+                return
+
     message_log = open('logs/messagelog.txt', "w+")
     i = 1
 
@@ -73,6 +85,14 @@ def update_user_log():
     Update userlog.txt
     """
     global USERS
+
+    if not os.path.exists(os.path.dirname("logs/")):
+        try:
+            os.makedirs(os.path.dirname("logs/"))
+        except OSError as exc: # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                print("[ERROR] Failed to create log directory")
+                return
     user_log = open('logs/userlog.txt', "w+")
     i = 1
     all_users = []
